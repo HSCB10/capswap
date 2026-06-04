@@ -1,20 +1,61 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
 
-export default function App() {
+import HomeScreen    from './src/screens/HomeScreen';
+import DetailScreen  from './src/screens/DetailScreen';
+import ChatScreen    from './src/screens/ChatScreen';
+import SellScreen    from './src/screens/SellScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import SpotsScreen   from './src/screens/SpotsScreen';
+import { COLORS }    from './src/data/constants';
+
+const Tab   = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function HomeStack() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home"   component={HomeScreen}   />
+      <Stack.Screen name="Detail" component={DetailScreen} />
+      <Stack.Screen name="Chat"   component={ChatScreen}   />
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default function App() {
+  return (
+    <NavigationContainer>
+      <StatusBar style="light" />
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: 'rgba(7,7,16,0.97)',
+            borderTopColor: 'rgba(255,255,255,0.06)',
+            borderTopWidth: 1,
+            height: 70,
+            paddingBottom: 10,
+          },
+          tabBarActiveTintColor: COLORS.gold,
+          tabBarInactiveTintColor: 'rgba(255,255,255,0.3)',
+          tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
+          tabBarIcon: ({ focused }) => {
+            const icons: Record<string, string> = {
+              HomeTab: '🏠', Sell: '➕', Spots: '📍', Profile: '👤',
+            };
+            return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.4 }}>{icons[route.name]}</Text>;
+          },
+        })}
+      >
+        <Tab.Screen name="HomeTab" component={HomeStack}    options={{ title: 'INICIO'  }} />
+        <Tab.Screen name="Sell"    component={SellScreen}   options={{ title: 'VENDER'  }} />
+        <Tab.Screen name="Spots"   component={SpotsScreen}  options={{ title: 'SPOTS'   }} />
+        <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'PERFIL' }} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
