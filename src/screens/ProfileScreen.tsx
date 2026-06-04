@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { COLORS, LEVELS } from '../data/constants';
 import { INITIAL_CAPS } from '../data/caps';
 
@@ -9,7 +9,7 @@ function getLevel(pts: number) {
 
 const MY_PTS = 1800;
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }: any) {
   const myLv = getLevel(MY_PTS);
   const myCaps = INITIAL_CAPS.filter(c => c.owner === 'yo');
   const progress = Math.min(100, ((MY_PTS - myLv.min) / (myLv.max - myLv.min)) * 100);
@@ -90,43 +90,63 @@ export default function ProfileScreen() {
           ))}
         </>}
 
+        {/* Quick links */}
+        <Text style={styles.sectionLabel}>MÁS OPCIONES</Text>
+        {[
+          { label: '⭐ Estados de gorras', screen: 'Conditions' },
+          { label: '🏪 Tipos de cuenta',   screen: 'Accounts'   },
+          { label: '📝 Crear cuenta',      screen: 'Register'   },
+        ].map(({ label, screen }) => (
+          <TouchableOpacity
+            key={screen}
+            onPress={() => navigation.navigate(screen)}
+            style={styles.quickLink}
+          >
+            <Text style={styles.quickLinkText}>{label}</Text>
+            <Text style={styles.quickLinkArrow}>→</Text>
+          </TouchableOpacity>
+        ))}
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: COLORS.bg },
-  header:         { padding: 20, paddingTop: 10 },
-  title:          { color: '#fff', fontWeight: '900', fontSize: 24 },
-  content:        { padding: 16, paddingBottom: 60 },
-  profileCard:    { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, padding: 20, borderTopWidth: 2, marginBottom: 20 },
-  avatarRow:      { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20 },
-  avatar:         { width: 56, height: 56, borderRadius: 28, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  avatarEmoji:    { fontSize: 26 },
-  username:       { color: '#fff', fontWeight: '900', fontSize: 18, marginBottom: 4 },
-  lvBadge:        { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
-  lvText:         { fontSize: 11, fontWeight: '700' },
-  ptsNum:         { fontWeight: '900', fontSize: 28 },
-  ptsLabel:       { color: COLORS.muted, fontSize: 10, fontWeight: '700' },
-  progressSection:{ marginBottom: 20 },
-  progressLabels: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  progressLabel:  { color: COLORS.muted, fontSize: 10, fontWeight: '700' },
-  progressBg:     { height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
-  progressFill:   { height: '100%', borderRadius: 3 },
-  statsRow:       { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 12, overflow: 'hidden' },
-  statItem:       { flex: 1, padding: 14, alignItems: 'center' },
-  statVal:        { fontWeight: '900', fontSize: 22 },
-  statLabel:      { color: COLORS.muted, fontSize: 9, fontWeight: '700', marginTop: 2 },
-  sectionLabel:   { color: COLORS.muted, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 10, marginTop: 4 },
-  levelRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 6, borderWidth: 1 },
-  levelIcon:      { fontSize: 24 },
-  levelName:      { fontWeight: '900', fontSize: 16 },
-  levelRange:     { color: COLORS.muted, fontSize: 11, marginTop: 2 },
-  activeTag:      { fontWeight: '800', fontSize: 11 },
-  capRow:         { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 6, borderLeftWidth: 3 },
-  capEmoji:       { fontSize: 28 },
-  capName:        { color: '#fff', fontWeight: '800', fontSize: 14 },
-  capBrand:       { color: COLORS.muted, fontSize: 12, marginTop: 2 },
-  capPrice:       { color: COLORS.gold, fontWeight: '900', fontSize: 15 },
+  container:       { flex: 1, backgroundColor: COLORS.bg },
+  header:          { padding: 20, paddingTop: 10 },
+  title:           { color: '#fff', fontWeight: '900', fontSize: 24 },
+  content:         { padding: 16, paddingBottom: 60 },
+  profileCard:     { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, padding: 20, borderTopWidth: 2, marginBottom: 20 },
+  avatarRow:       { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20 },
+  avatar:          { width: 56, height: 56, borderRadius: 28, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  avatarEmoji:     { fontSize: 26 },
+  username:        { color: '#fff', fontWeight: '900', fontSize: 18, marginBottom: 4 },
+  lvBadge:         { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
+  lvText:          { fontSize: 11, fontWeight: '700' },
+  ptsNum:          { fontWeight: '900', fontSize: 28 },
+  ptsLabel:        { color: COLORS.muted, fontSize: 10, fontWeight: '700' },
+  progressSection: { marginBottom: 20 },
+  progressLabels:  { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  progressLabel:   { color: COLORS.muted, fontSize: 10, fontWeight: '700' },
+  progressBg:      { height: 6, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
+  progressFill:    { height: '100%', borderRadius: 3 },
+  statsRow:        { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 12, overflow: 'hidden' },
+  statItem:        { flex: 1, padding: 14, alignItems: 'center' },
+  statVal:         { fontWeight: '900', fontSize: 22 },
+  statLabel:       { color: COLORS.muted, fontSize: 9, fontWeight: '700', marginTop: 2 },
+  sectionLabel:    { color: COLORS.muted, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 10, marginTop: 4 },
+  levelRow:        { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 6, borderWidth: 1 },
+  levelIcon:       { fontSize: 24 },
+  levelName:       { fontWeight: '900', fontSize: 16 },
+  levelRange:      { color: COLORS.muted, fontSize: 11, marginTop: 2 },
+  activeTag:       { fontWeight: '800', fontSize: 11 },
+  capRow:          { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, marginBottom: 6, borderLeftWidth: 3 },
+  capEmoji:        { fontSize: 28 },
+  capName:         { color: '#fff', fontWeight: '800', fontSize: 14 },
+  capBrand:        { color: COLORS.muted, fontSize: 12, marginTop: 2 },
+  capPrice:        { color: COLORS.gold, fontWeight: '900', fontSize: 15 },
+  quickLink:       { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  quickLinkText:   { color: '#fff', fontWeight: '700', fontSize: 14 },
+  quickLinkArrow:  { color: COLORS.muted, fontSize: 16 },
 });

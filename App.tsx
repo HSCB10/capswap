@@ -5,14 +5,17 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-import HomeScreen    from './src/screens/HomeScreen';
-import DetailScreen  from './src/screens/DetailScreen';
-import ChatScreen    from './src/screens/ChatScreen';
-import SellScreen    from './src/screens/SellScreen';
-import ProfileScreen from './src/screens/ProfileScreen';
-import SpotsScreen   from './src/screens/SpotsScreen';
-import SearchScreen  from './src/screens/SearchScreen';
-import { COLORS }    from './src/data/constants';
+import HomeScreen       from './src/screens/HomeScreen';
+import DetailScreen     from './src/screens/DetailScreen';
+import ChatScreen       from './src/screens/ChatScreen';
+import SellScreen       from './src/screens/SellScreen';
+import ProfileScreen    from './src/screens/ProfileScreen';
+import SpotsScreen      from './src/screens/SpotsScreen';
+import SearchScreen     from './src/screens/SearchScreen';
+import ConditionsScreen from './src/screens/ConditionsScreen';
+import AccountsScreen   from './src/screens/AccountsScreen';
+import RegisterScreen   from './src/screens/RegisterScreen';
+import { COLORS }       from './src/data/constants';
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,6 +40,17 @@ function SearchStack() {
   );
 }
 
+function ProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Profile"    component={ProfileScreen}    />
+      <Stack.Screen name="Conditions" component={ConditionsScreen} />
+      <Stack.Screen name="Accounts"   component={AccountsScreen}   />
+      <Stack.Screen name="Register"   component={RegisterScreen}   />
+    </Stack.Navigator>
+  );
+}
+
 export default function App() {
   return (
     <NavigationContainer>
@@ -56,17 +70,17 @@ export default function App() {
           tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
           tabBarIcon: ({ focused }) => {
             const icons: Record<string, string> = {
-              HomeTab: '🏠', SearchTab: '🔍', Sell: '➕', Spots: '📍', Profile: '👤',
+              HomeTab: '🏠', SearchTab: '🔍', Sell: '➕', Spots: '📍', ProfileTab: '👤',
             };
             return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.4 }}>{icons[route.name]}</Text>;
           },
         })}
       >
-        <Tab.Screen name="HomeTab"   component={HomeStack}    options={{ title: 'INICIO'  }} />
-        <Tab.Screen name="SearchTab" component={SearchStack}  options={{ title: 'BUSCAR'  }} />
-        <Tab.Screen name="Sell"      component={SellScreen}   options={{ title: 'VENDER'  }} />
-        <Tab.Screen name="Spots"     component={SpotsScreen}  options={{ title: 'SPOTS'   }} />
-        <Tab.Screen name="Profile"   component={ProfileScreen} options={{ title: 'PERFIL' }} />
+        <Tab.Screen name="HomeTab"    component={HomeStack}    options={{ title: 'INICIO'  }} />
+        <Tab.Screen name="SearchTab"  component={SearchStack}  options={{ title: 'BUSCAR'  }} />
+        <Tab.Screen name="Sell"       component={SellScreen}   options={{ title: 'VENDER'  }} />
+        <Tab.Screen name="Spots"      component={SpotsScreen}  options={{ title: 'SPOTS'   }} />
+        <Tab.Screen name="ProfileTab" component={ProfileStack} options={{ title: 'PERFIL'  }} />
       </Tab.Navigator>
     </NavigationContainer>
   );
