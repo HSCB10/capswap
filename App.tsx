@@ -11,6 +11,7 @@ import ChatScreen    from './src/screens/ChatScreen';
 import SellScreen    from './src/screens/SellScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import SpotsScreen   from './src/screens/SpotsScreen';
+import SearchScreen  from './src/screens/SearchScreen';
 import { COLORS }    from './src/data/constants';
 
 const Tab   = createBottomTabNavigator();
@@ -20,6 +21,16 @@ function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Home"   component={HomeScreen}   />
+      <Stack.Screen name="Detail" component={DetailScreen} />
+      <Stack.Screen name="Chat"   component={ChatScreen}   />
+    </Stack.Navigator>
+  );
+}
+
+function SearchStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Detail" component={DetailScreen} />
       <Stack.Screen name="Chat"   component={ChatScreen}   />
     </Stack.Navigator>
@@ -45,16 +56,17 @@ export default function App() {
           tabBarLabelStyle: { fontSize: 10, fontWeight: '700' },
           tabBarIcon: ({ focused }) => {
             const icons: Record<string, string> = {
-              HomeTab: '🏠', Sell: '➕', Spots: '📍', Profile: '👤',
+              HomeTab: '🏠', SearchTab: '🔍', Sell: '➕', Spots: '📍', Profile: '👤',
             };
             return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.4 }}>{icons[route.name]}</Text>;
           },
         })}
       >
-        <Tab.Screen name="HomeTab" component={HomeStack}    options={{ title: 'INICIO'  }} />
-        <Tab.Screen name="Sell"    component={SellScreen}   options={{ title: 'VENDER'  }} />
-        <Tab.Screen name="Spots"   component={SpotsScreen}  options={{ title: 'SPOTS'   }} />
-        <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'PERFIL' }} />
+        <Tab.Screen name="HomeTab"   component={HomeStack}    options={{ title: 'INICIO'  }} />
+        <Tab.Screen name="SearchTab" component={SearchStack}  options={{ title: 'BUSCAR'  }} />
+        <Tab.Screen name="Sell"      component={SellScreen}   options={{ title: 'VENDER'  }} />
+        <Tab.Screen name="Spots"     component={SpotsScreen}  options={{ title: 'SPOTS'   }} />
+        <Tab.Screen name="Profile"   component={ProfileScreen} options={{ title: 'PERFIL' }} />
       </Tab.Navigator>
     </NavigationContainer>
   );
