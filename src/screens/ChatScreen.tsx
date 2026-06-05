@@ -1,17 +1,23 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
-import { COLORS, LEVELS } from '../data/constants';
+import Svg, { Path, Circle, Line } from 'react-native-svg';
+import { LEVELS } from '../data/constants';
 import { Cap, Message } from '../types';
+
+const C = {
+  bg: '#0C0C0C', surface: '#141414', surface2: '#1C1C1C',
+  white: '#FFFFFF', muted: '#444', border: 'rgba(255,255,255,0.05)', red: '#FF3030',
+};
 
 function getLevel(pts: number) {
   return LEVELS.find(l => pts >= l.min && pts <= l.max) || LEVELS[0];
 }
-function cop(n: number) { return '$' + n.toLocaleString('es-CO') + ' COP'; }
+function cop(n: number) { return '$' + n.toLocaleString('es-CO'); }
 
 const INIT_MSGS: Message[] = [
-  { id: 1, from: 'owner', text: '¡Hola! ¿Te interesa la gorra?', time: '9:32', mine: false },
-  { id: 2, from: 'yo',    text: 'Sí parce, todavía disponible 🔥', time: '9:33', mine: true },
-  { id: 3, from: 'owner', text: '¿Harías swap por una Palace?', time: '9:34', mine: false },
+  { id: 1, from: 'owner', text: '¡Hola! ¿Te interesa la gorra?',   time: '9:32', mine: false },
+  { id: 2, from: 'yo',    text: 'Sí parce, todavía disponible 🔥', time: '9:33', mine: true  },
+  { id: 3, from: 'owner', text: '¿Harías swap por una Palace?',     time: '9:34', mine: false },
 ];
 
 const REPLIES = [
@@ -24,26 +30,23 @@ const REPLIES = [
 
 export default function ChatScreen({ route, navigation }: any) {
   const { cap }: { cap: Cap } = route.params;
-  const [msgs, setMsgs] = useState<Message[]>(INIT_MSGS);
+  const [msgs, setMsgs]   = useState<Message[]>(INIT_MSGS);
   const [input, setInput] = useState('');
-  const listRef = useRef<FlatList>(null);
-  const lv = getLevel(cap.ownerPts);
+  const listRef           = useRef<FlatList>(null);
+  const lv                = getLevel(cap.ownerPts);
 
   function send() {
     if (!input.trim()) return;
     const now = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-    const newMsg: Message = { id: Date.now(), from: 'yo', text: input.trim(), time: now, mine: true };
-    setMsgs(p => [...p, newMsg]);
+    setMsgs(p => [...p, { id: Date.now(), from: 'yo', text: input.trim(), time: now, mine: true }]);
     setInput('');
     setTimeout(() => {
-      const reply: Message = {
-        id: Date.now() + 1,
-        from: cap.owner,
+      setMsgs(p => [...p, {
+        id: Date.now() + 1, from: cap.owner,
         text: REPLIES[Math.floor(Math.random() * REPLIES.length)],
         time: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
         mine: false,
-      };
-      setMsgs(p => [...p, reply]);
+      }]);
       listRef.current?.scrollToEnd({ animated: true });
     }, 1200);
     listRef.current?.scrollToEnd({ animated: true });
@@ -53,32 +56,50 @@ export default function ChatScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>← Volver</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path d="M19 12H5M12 5l-7 7 7 7" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+          <Text style={styles.backText}>Volver</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerUser}>@{cap.owner}</Text>
-          <View style={[styles.lvBadge, { backgroundColor: lv.color + '20', borderColor: lv.color + '40' }]}>
-            <Text style={[styles.lvText, { color: lv.color }]}>{lv.icon} {lv.name}</Text>
+          <View style={styles.headerAvatar}>
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#fff" strokeWidth={2} strokeLinecap="round"/>
+              <Circle cx="12" cy="7" r="4" stroke="#fff" strokeWidth={2}/>
+            </Svg>
+          </View>
+          <View>
+            <Text style={styles.headerUser}>@{cap.owner}</Text>
+            <Text style={styles.headerLevel}>{lv.icon} {lv.name}</Text>
           </View>
         </View>
-        <View style={{ width: 60 }} />
+        <View style={{ width: 80 }} />
       </View>
 
       {/* Cap preview */}
       <View style={styles.capPreview}>
-        <Text style={styles.capPreviewEmoji}>🧢</Text>
+        <View style={styles.capPreviewImg}>
+          <Text style={{ fontSize: 24 }}>🧢</Text>
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.capPreviewName} numberOfLines={1}>{cap.name}</Text>
           <Text style={styles.capPreviewPrice}>{cop(cap.price)} COP</Text>
         </View>
         <TouchableOpacity style={styles.escrowBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.escrowBtnText}>ESCROW</Text>
+          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none">
+            <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={C.bg} strokeWidth={2.5} strokeLinecap="round"/>
+          </Svg>
+          <Text style={styles.escrowBtnText}>Escrow</Text>
         </TouchableOpacity>
       </View>
 
       {/* Messages */}
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={90}
+      >
         <FlatList
           ref={listRef}
           data={msgs}
@@ -100,14 +121,17 @@ export default function ChatScreen({ route, navigation }: any) {
           <TextInput
             style={styles.input}
             placeholder="Escribe un mensaje..."
-            placeholderTextColor="rgba(255,255,255,0.25)"
+            placeholderTextColor="#333"
             value={input}
             onChangeText={setInput}
             onSubmitEditing={send}
             returnKeyType="send"
           />
-          <TouchableOpacity style={styles.sendBtn} onPress={send}>
-            <Text style={styles.sendBtnText}>→</Text>
+          <TouchableOpacity style={styles.sendBtn} onPress={send} activeOpacity={0.8}>
+            <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
+              <Line x1="22" y1="2" x2="11" y2="13" stroke={C.bg} strokeWidth={2.5} strokeLinecap="round"/>
+              <Path d="M22 2L15 22l-4-9-9-4 20-7z" stroke={C.bg} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>
+            </Svg>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -116,30 +140,30 @@ export default function ChatScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container:        { flex: 1, backgroundColor: COLORS.bg },
-  header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
-  back:             { color: COLORS.gold, fontWeight: '800', fontSize: 14 },
-  headerCenter:     { alignItems: 'center', gap: 4 },
-  headerUser:       { color: '#fff', fontWeight: '800', fontSize: 15 },
-  lvBadge:          { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3 },
-  lvText:           { fontSize: 10, fontWeight: '700' },
-  capPreview:       { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, paddingHorizontal: 16, backgroundColor: 'rgba(255,255,255,0.04)', borderTopWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  capPreviewEmoji:  { fontSize: 28 },
-  capPreviewName:   { color: '#fff', fontWeight: '800', fontSize: 13 },
-  capPreviewPrice:  { color: COLORS.gold, fontWeight: '900', fontSize: 16 },
-  escrowBtn:        { backgroundColor: COLORS.gold, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  escrowBtnText:    { color: '#000', fontWeight: '800', fontSize: 11 },
+  container:        { flex: 1, backgroundColor: C.bg },
+  header:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  backBtn:          { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border },
+  backText:         { color: '#fff', fontWeight: '700', fontSize: 13 },
+  headerCenter:     { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  headerAvatar:     { width: 36, height: 36, backgroundColor: '#1A1A1A', borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  headerUser:       { color: C.white, fontWeight: '800', fontSize: 14 },
+  headerLevel:      { color: C.muted, fontSize: 11, marginTop: 1 },
+  capPreview:       { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 12, backgroundColor: C.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: C.border },
+  capPreviewImg:    { width: 44, height: 44, backgroundColor: '#1C1C1C', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  capPreviewName:   { color: C.white, fontWeight: '800', fontSize: 13 },
+  capPreviewPrice:  { color: C.muted, fontSize: 12, marginTop: 1 },
+  escrowBtn:        { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.white, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 9 },
+  escrowBtnText:    { color: C.bg, fontWeight: '800', fontSize: 12 },
   msgList:          { padding: 16, gap: 12 },
   msgWrapper:       { alignItems: 'flex-start', marginBottom: 4 },
   msgWrapperMine:   { alignItems: 'flex-end' },
   bubble:           { maxWidth: '75%', padding: 12, borderRadius: 18 },
-  bubbleMine:       { backgroundColor: COLORS.gold, borderBottomRightRadius: 4 },
-  bubbleOther:      { backgroundColor: 'rgba(255,255,255,0.08)', borderBottomLeftRadius: 4 },
-  bubbleText:       { color: '#fff', fontSize: 14 },
-  bubbleTextMine:   { color: '#000', fontWeight: '600' },
-  msgTime:          { fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 3 },
-  inputRow:         { flexDirection: 'row', gap: 10, padding: 12, paddingBottom: 20, backgroundColor: 'rgba(7,7,16,0.95)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  input:            { flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, color: '#fff', fontSize: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  sendBtn:          { backgroundColor: COLORS.gold, borderRadius: 14, width: 48, alignItems: 'center', justifyContent: 'center' },
-  sendBtnText:      { color: '#000', fontWeight: '900', fontSize: 20 },
+  bubbleMine:       { backgroundColor: C.white, borderBottomRightRadius: 4 },
+  bubbleOther:      { backgroundColor: C.surface, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: C.border },
+  bubbleText:       { color: C.white, fontSize: 14, lineHeight: 20 },
+  bubbleTextMine:   { color: C.bg, fontWeight: '600' },
+  msgTime:          { fontSize: 10, color: '#333', marginTop: 4 },
+  inputRow:         { flexDirection: 'row', gap: 10, padding: 12, paddingBottom: 20, backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border },
+  input:            { flex: 1, backgroundColor: '#1A1A1A', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, color: C.white, fontSize: 14, borderWidth: 1, borderColor: C.border },
+  sendBtn:          { backgroundColor: C.white, borderRadius: 14, width: 48, alignItems: 'center', justifyContent: 'center' },
 });

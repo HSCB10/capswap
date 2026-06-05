@@ -1,117 +1,112 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import { CONDITIONS, COLORS } from '../data/constants';
+import Svg, { Path, Line, Circle } from 'react-native-svg';
+import { CONDITIONS } from '../data/constants';
+
+const C = {
+  bg: '#0C0C0C', surface: '#141414',
+  white: '#FFFFFF', muted: '#444', border: 'rgba(255,255,255,0.05)', red: '#FF3030',
+};
+
+const COND_DOTS = ['#22CC66', '#4488FF', '#FFAA22', '#FF6644', '#FF4444'];
 
 const DETAILS = [
-  {
-    examples: 'Directo de tienda, nunca usada, hangtag original intacto',
-    priceNote: 'Precio más alto del mercado. Compradores dispuestos a pagar premium.',
-    tip: 'Incluye fotos del hangtag y caja original para generar más confianza.',
-  },
-  {
-    examples: 'Usada 1-3 veces, sin manchas, sin deformación de copa',
-    priceNote: 'Hasta 85% del precio original. Alta demanda en el mercado.',
-    tip: 'Fotografía en buena luz para mostrar que no tiene desgaste visible.',
-  },
-  {
-    examples: 'Uso regular, pequeñas marcas de sudor, copa bien formada',
-    priceNote: 'Entre 50-70% del precio original. Segmento más activo.',
-    tip: 'Sé honesto con el estado. Los compradores valoran la transparencia.',
-  },
-  {
-    examples: 'Manchas leves, deformación mínima, desgaste visible en visera',
-    priceNote: 'Entre 25-45% del precio original. Mercado de coleccionistas.',
-    tip: 'Detalla claramente los defectos en la descripción para evitar disputas.',
-  },
-  {
-    examples: 'Rotura en correa, manchas fuertes, visera muy deformada',
-    priceNote: 'Precio simbólico. Ideal para coleccionistas o restauradores.',
-    tip: 'Menciona qué tipo de reparación necesita para atraer al comprador correcto.',
-  },
+  { examples: 'Directo de tienda, nunca usada, hangtag original intacto', priceNote: 'Precio más alto del mercado. Compradores dispuestos a pagar premium.', tip: 'Incluye fotos del hangtag y caja original para generar más confianza.' },
+  { examples: 'Usada 1-3 veces, sin manchas, sin deformación de copa', priceNote: 'Hasta 85% del precio original. Alta demanda en el mercado.', tip: 'Fotografía en buena luz para mostrar que no tiene desgaste visible.' },
+  { examples: 'Uso regular, pequeñas marcas de sudor, copa bien formada', priceNote: 'Entre 50-70% del precio original. Segmento más activo.', tip: 'Sé honesto con el estado. Los compradores valoran la transparencia.' },
+  { examples: 'Manchas leves, deformación mínima, desgaste visible en visera', priceNote: 'Entre 25-45% del precio original. Mercado de coleccionistas.', tip: 'Detalla claramente los defectos en la descripción.' },
+  { examples: 'Rotura en correa, manchas fuertes, visera muy deformada', priceNote: 'Precio simbólico. Ideal para coleccionistas o restauradores.', tip: 'Menciona qué tipo de reparación necesita.' },
 ];
 
-export default function ConditionsScreen() {
+export default function ConditionsScreen({ navigation }: any) {
   const [expanded, setExpanded] = useState<number | null>(0);
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Estados de gorras</Text>
-        <Text style={styles.heroSub}>Guía oficial de condiciones y puntos en CapSwap</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path d="M19 12H5M12 5l-7 7 7 7" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+          <Text style={styles.backText}>Volver</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <Text style={styles.title}>Estados de gorras</Text>
+        <Text style={styles.subtitle}>Guía oficial de condiciones y puntos en CapSwap</Text>
 
         {/* Points summary */}
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>¿Para qué sirven los puntos?</Text>
-          <Text style={styles.summaryText}>Cada gorra que publicas te da puntos según su condición. Más puntos = nivel más alto = más privilegios en la plataforma.</Text>
-          <View style={styles.summaryRow}>
+          <Text style={styles.summaryText}>Cada gorra que publicas te da puntos según su condición. Más puntos = nivel más alto = más privilegios.</Text>
+          <View style={styles.summaryPts}>
             {CONDITIONS.map((c, i) => (
               <View key={i} style={styles.summaryItem}>
-                <Text style={[styles.summaryPts, { color: c.color }]}>+{c.pts}</Text>
-                <Text style={styles.summaryLabel}>pts</Text>
+                <View style={[styles.summaryDot, { backgroundColor: COND_DOTS[i] }]} />
+                <Text style={styles.summaryNum}>+{c.pts}</Text>
               </View>
             ))}
           </View>
         </View>
 
         {/* Condition cards */}
-        {CONDITIONS.map((c, i) => {
-          const detail = DETAILS[i];
-          const isOpen = expanded === i;
-          return (
-            <TouchableOpacity
-              key={i}
-              style={[styles.card, { borderColor: isOpen ? c.color + '60' : 'rgba(255,255,255,0.06)', backgroundColor: isOpen ? c.color + '08' : 'rgba(255,255,255,0.04)' }]}
-              onPress={() => setExpanded(isOpen ? null : i)}
-              activeOpacity={0.8}
-            >
-              {/* Header */}
-              <View style={styles.cardHead}>
-                <View style={[styles.dot, { backgroundColor: c.color }]} />
-                <Text style={[styles.cardName, { color: c.color }]}>{c.label}</Text>
-                <View style={[styles.ptsBadge, { backgroundColor: c.color + '20', borderColor: c.color + '40' }]}>
-                  <Text style={[styles.ptsText, { color: c.color }]}>+{c.pts} pts</Text>
-                </View>
-                <Text style={styles.arrow}>{isOpen ? '▲' : '▼'}</Text>
-              </View>
-
-              {/* Expanded content */}
-              {isOpen && (
-                <View style={styles.cardBody}>
-                  <View style={styles.divider} />
-
-                  <Text style={styles.bodyLabel}>EJEMPLOS</Text>
-                  <Text style={styles.bodyText}>{detail.examples}</Text>
-
-                  <Text style={[styles.bodyLabel, { marginTop: 14 }]}>PRECIO EN MERCADO</Text>
-                  <View style={[styles.priceNote, { backgroundColor: c.color + '15', borderColor: c.color + '30' }]}>
-                    <Text style={[styles.priceNoteText, { color: c.color }]}>{detail.priceNote}</Text>
+        <Text style={styles.sectionLabel}>CONDICIONES</Text>
+        <View style={styles.conditionsCard}>
+          {CONDITIONS.map((c, i) => {
+            const detail  = DETAILS[i];
+            const isOpen  = expanded === i;
+            const isLast  = i === CONDITIONS.length - 1;
+            return (
+              <View key={i}>
+                <TouchableOpacity
+                  style={[styles.condHeader, !isLast && !isOpen && styles.condHeaderBorder]}
+                  onPress={() => setExpanded(isOpen ? null : i)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.condDot, { backgroundColor: COND_DOTS[i] }]} />
+                  <Text style={styles.condName}>{c.label}</Text>
+                  <View style={styles.condPtsBadge}>
+                    <Text style={styles.condPtsText}>+{c.pts} pts</Text>
                   </View>
+                  <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                    <Path d={isOpen ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"} stroke="#444" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                  </Svg>
+                </TouchableOpacity>
 
-                  <Text style={[styles.bodyLabel, { marginTop: 14 }]}>💡 TIP</Text>
-                  <Text style={styles.bodyText}>{detail.tip}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          );
-        })}
+                {isOpen && (
+                  <View style={[styles.condBody, !isLast && styles.condBodyBorder]}>
+                    <Text style={styles.bodyLabel}>EJEMPLOS</Text>
+                    <Text style={styles.bodyText}>{detail.examples}</Text>
 
-        {/* How points work */}
-        <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>🏆 Cómo suben tus puntos</Text>
+                    <Text style={[styles.bodyLabel, { marginTop: 14 }]}>PRECIO EN MERCADO</Text>
+                    <View style={styles.priceNote}>
+                      <Text style={styles.priceNoteText}>{detail.priceNote}</Text>
+                    </View>
+
+                    <Text style={[styles.bodyLabel, { marginTop: 14 }]}>CONSEJO</Text>
+                    <Text style={styles.bodyText}>{detail.tip}</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Points table */}
+        <Text style={styles.sectionLabel}>CÓMO SUBEN TUS PUNTOS</Text>
+        <View style={styles.tableCard}>
           {[
-            ['Publicar gorra Nueva con etiqueta', '+70 pts'],
-            ['Completar una venta exitosa', '+20 pts'],
-            ['Completar un swap verificado', '+25 pts'],
-            ['Recibir calificación 5 estrellas', '+10 pts'],
-            ['Reportar abuso (válido)', '+5 pts'],
-            ['Reporte falso enviado', '−20 pts'],
-          ].map(([action, pts], i) => (
-            <View key={i} style={styles.infoRow}>
-              <Text style={styles.infoAction}>{action}</Text>
-              <Text style={[styles.infoPts, { color: pts.startsWith('+') ? '#00E5A0' : '#FF5252' }]}>{pts}</Text>
+            ['Publicar gorra nueva con etiqueta', '+70'],
+            ['Completar una venta exitosa',       '+20'],
+            ['Completar un swap verificado',      '+25'],
+            ['Recibir calificación 5 estrellas',  '+10'],
+            ['Reportar abuso válido',             '+5' ],
+            ['Reporte falso enviado',             '−20'],
+          ].map(([action, pts], i, arr) => (
+            <View key={i} style={[styles.tableRow, i < arr.length - 1 && styles.tableRowBorder]}>
+              <Text style={styles.tableAction}>{action}</Text>
+              <Text style={[styles.tablePts, pts.startsWith('+') ? styles.tablePtsPos : styles.tablePtsNeg]}>{pts}</Text>
             </View>
           ))}
         </View>
@@ -122,34 +117,39 @@ export default function ConditionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: COLORS.bg },
-  hero:           { backgroundColor: '#0D0D1A', padding: 20, paddingTop: 10 },
-  heroTitle:      { color: '#fff', fontWeight: '900', fontSize: 22, marginBottom: 4 },
-  heroSub:        { color: 'rgba(255,255,255,0.4)', fontSize: 13 },
-  content:        { padding: 16, paddingBottom: 80 },
-  summaryCard:    { backgroundColor: 'rgba(255,215,0,0.08)', borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)', borderRadius: 16, padding: 18, marginBottom: 16 },
-  summaryTitle:   { color: COLORS.gold, fontWeight: '800', fontSize: 14, marginBottom: 8 },
-  summaryText:    { color: 'rgba(255,255,255,0.55)', fontSize: 13, lineHeight: 20, marginBottom: 14 },
-  summaryRow:     { flexDirection: 'row', justifyContent: 'space-between' },
-  summaryItem:    { alignItems: 'center' },
-  summaryPts:     { fontWeight: '900', fontSize: 20 },
-  summaryLabel:   { color: COLORS.muted, fontSize: 10, fontWeight: '700' },
-  card:           { borderRadius: 14, borderWidth: 1, marginBottom: 8, overflow: 'hidden' },
-  cardHead:       { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16 },
-  dot:            { width: 10, height: 10, borderRadius: 5, flexShrink: 0 },
-  cardName:       { flex: 1, fontWeight: '800', fontSize: 15 },
-  ptsBadge:       { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4 },
-  ptsText:        { fontSize: 11, fontWeight: '800' },
-  arrow:          { color: COLORS.muted, fontSize: 11 },
-  cardBody:       { paddingHorizontal: 16, paddingBottom: 16 },
-  divider:        { height: 0.5, backgroundColor: 'rgba(255,255,255,0.08)', marginBottom: 14 },
-  bodyLabel:      { color: 'rgba(255,255,255,0.35)', fontSize: 10, fontWeight: '700', letterSpacing: 1, marginBottom: 6 },
-  bodyText:       { color: 'rgba(255,255,255,0.65)', fontSize: 13, lineHeight: 20 },
-  priceNote:      { borderRadius: 10, borderWidth: 1, padding: 12 },
-  priceNoteText:  { fontSize: 13, fontWeight: '600', lineHeight: 18 },
-  infoCard:       { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, padding: 18, marginTop: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
-  infoTitle:      { color: '#fff', fontWeight: '800', fontSize: 15, marginBottom: 14 },
-  infoRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  infoAction:     { color: 'rgba(255,255,255,0.6)', fontSize: 13, flex: 1 },
-  infoPts:        { fontWeight: '800', fontSize: 14 },
+  container:       { flex: 1, backgroundColor: C.bg },
+  header:          { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  backBtn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border, alignSelf: 'flex-start' },
+  backText:        { color: '#fff', fontWeight: '700', fontSize: 13 },
+  scroll:          { padding: 16, paddingBottom: 60, gap: 12 },
+  title:           { fontSize: 27, fontWeight: '900', color: C.white, letterSpacing: -1, marginBottom: 4 },
+  subtitle:        { color: C.muted, fontSize: 13, lineHeight: 20, marginBottom: 4 },
+  summaryCard:     { backgroundColor: C.surface, borderRadius: 20, padding: 18, borderWidth: 1, borderColor: C.border, gap: 10 },
+  summaryTitle:    { color: C.white, fontWeight: '800', fontSize: 14 },
+  summaryText:     { color: C.muted, fontSize: 13, lineHeight: 20 },
+  summaryPts:      { flexDirection: 'row', justifyContent: 'space-between' },
+  summaryItem:     { alignItems: 'center', gap: 6 },
+  summaryDot:      { width: 10, height: 10, borderRadius: 5 },
+  summaryNum:      { color: C.white, fontWeight: '900', fontSize: 16 },
+  sectionLabel:    { color: '#333', fontSize: 10, fontWeight: '700', letterSpacing: 2, marginLeft: 4 },
+  conditionsCard:  { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  condHeader:      { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
+  condHeaderBorder:{ borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  condDot:         { width: 8, height: 8, borderRadius: 4, flexShrink: 0 },
+  condName:        { flex: 1, color: C.white, fontWeight: '700', fontSize: 14 },
+  condPtsBadge:    { backgroundColor: 'rgba(255,48,48,0.1)', borderWidth: 1, borderColor: 'rgba(255,48,48,0.2)', borderRadius: 8, paddingHorizontal: 9, paddingVertical: 4 },
+  condPtsText:     { color: C.red, fontSize: 11, fontWeight: '800' },
+  condBody:        { paddingHorizontal: 16, paddingBottom: 16, gap: 6 },
+  condBodyBorder:  { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  bodyLabel:       { color: '#333', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
+  bodyText:        { color: '#666', fontSize: 13, lineHeight: 20 },
+  priceNote:       { backgroundColor: '#111', borderRadius: 12, padding: 12 },
+  priceNoteText:   { color: '#888', fontSize: 13, lineHeight: 18 },
+  tableCard:       { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, overflow: 'hidden' },
+  tableRow:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
+  tableRowBorder:  { borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  tableAction:     { color: '#666', fontSize: 13, flex: 1 },
+  tablePts:        { fontWeight: '900', fontSize: 15, letterSpacing: -0.5 },
+  tablePtsPos:     { color: '#22CC66' },
+  tablePtsNeg:     { color: C.red },
 });

@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
-import { CONDITIONS, COLORS, LEVELS, SAFE_SPOTS } from '../data/constants';
+import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
+import { CONDITIONS, LEVELS, SAFE_SPOTS } from '../data/constants';
 import { Cap, EscrowState } from '../types';
+
+const C = {
+  bg: '#0C0C0C', surface: '#141414', surface2: '#1C1C1C',
+  white: '#FFFFFF', muted: '#444', muted2: '#666',
+  border: 'rgba(255,255,255,0.05)', red: '#FF3030',
+};
 
 function getLevel(pts: number) {
   return LEVELS.find(l => pts >= l.min && pts <= l.max) || LEVELS[0];
 }
-function cop(n: number) { return '$' + n.toLocaleString('es-CO') + ' COP'; }
+function cop(n: number) { return '$' + n.toLocaleString('es-CO'); }
+
+const COND_DOTS = ['#22CC66', '#4488FF', '#FFAA22', '#FF6644', '#FF4444'];
 
 export default function DetailScreen({ route, navigation }: any) {
   const { cap }: { cap: Cap } = route.params;
@@ -14,8 +23,9 @@ export default function DetailScreen({ route, navigation }: any) {
   const [reported, setReported] = useState(cap.reported);
   const cond = CONDITIONS[cap.condition];
   const ownerLv = getLevel(cap.ownerPts);
+  const isSwap = cap.type === 'swap' || cap.type === 'ambos';
 
-  function handleEscrow() {
+  function handleBuy() {
     setEscrow('locked');
     Alert.alert('🔒 Escrow activado', 'Fondos retenidos. Realiza el pago y confirma.');
   }
@@ -24,12 +34,12 @@ export default function DetailScreen({ route, navigation }: any) {
     setEscrow('confirmed');
     setTimeout(() => {
       setEscrow('released');
-      Alert.alert('🎉 ¡Completado!', 'Transacción liberada exitosamente.');
+      Alert.alert('✅ ¡Completado!', 'Transacción liberada exitosamente.');
     }, 1500);
   }
 
   function handleReport() {
-    Alert.alert('⚠️ Reportar', '¿Confirmas el reporte? Costo: 20 pts', [
+    Alert.alert('Reportar gorra', '¿Confirmas el reporte? Costo: 20 pts', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Reportar', style: 'destructive', onPress: () => setReported(r => r + 1) },
     ]);
@@ -37,75 +47,105 @@ export default function DetailScreen({ route, navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>← Volver</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path d="M19 12H5M12 5l-7 7 7 7" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+          <Text style={styles.backText}>Volver</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleReport}>
-          <Text style={styles.reportBtn}>⚠️ Reportar</Text>
+        <TouchableOpacity onPress={handleReport} style={styles.reportBtn}>
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke={C.red} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+            <Line x1="12" y1="9" x2="12" y2="13" stroke={C.red} strokeWidth={2} strokeLinecap="round"/>
+            <Line x1="12" y1="17" x2="12.01" y2="17" stroke={C.red} strokeWidth={2} strokeLinecap="round"/>
+          </Svg>
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         {/* Hero */}
-        <View style={[styles.hero, { backgroundColor: cap.color + '15' }]}>
+        <View style={styles.hero}>
           <Text style={styles.heroEmoji}>🧢</Text>
+          <View style={[styles.typePill, isSwap ? styles.typePillSwap : styles.typePillVenta]}>
+            <Text style={[styles.typePillText, isSwap && { color: '#fff' }]}>
+              {isSwap ? 'SWAP' : 'VENTA'}
+            </Text>
+          </View>
+          <View style={styles.condPill}>
+            <View style={[styles.condDot, { backgroundColor: COND_DOTS[cap.condition] }]} />
+            <Text style={styles.condText}>{cond.label}</Text>
+          </View>
           {reported >= 3 && (
             <View style={styles.pausedOverlay}>
-              <Text style={styles.pausedText}>⚠️ PAUSADA POR REPORTES</Text>
+              <Text style={styles.pausedText}>PAUSADA POR REPORTES</Text>
             </View>
           )}
         </View>
 
         <View style={styles.content}>
-          {/* Info */}
-          <View style={[styles.card, { borderTopColor: cap.color }]}>
+          {/* Title */}
+          <View style={styles.titleSection}>
             <Text style={styles.capName}>{cap.name}</Text>
-            <Text style={styles.capBrand}>{cap.brand}</Text>
+            <Text style={styles.capBrand}>{cap.brand.toUpperCase()}</Text>
             <View style={styles.priceRow}>
               <Text style={styles.price}>{cop(cap.price)}</Text>
-              <View style={[styles.condBadge, { backgroundColor: cond.color + '20', borderColor: cond.color + '50' }]}>
-                <Text style={[styles.condText, { color: cond.color }]}>{cond.label}</Text>
+              <View style={styles.ptsBadge}>
+                <Text style={styles.ptsBadgeText}>+{cond.pts} pts</Text>
               </View>
             </View>
           </View>
 
           {/* Owner */}
-          <View style={[styles.card, { borderTopColor: ownerLv.color }]}>
-            <View style={styles.ownerRow}>
-              <View style={[styles.ownerAvatar, { backgroundColor: ownerLv.color + '20', borderColor: ownerLv.color + '50' }]}>
-                <Text style={styles.ownerEmoji}>👤</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.ownerName}>@{cap.owner}</Text>
-                <View style={[styles.lvBadge, { backgroundColor: ownerLv.color + '20', borderColor: ownerLv.color + '40' }]}>
-                  <Text style={[styles.lvText, { color: ownerLv.color }]}>{ownerLv.icon} {ownerLv.name}</Text>
-                </View>
-              </View>
-              <Text style={[styles.ownerPts, { color: ownerLv.color }]}>{cap.ownerPts}pts</Text>
+          <View style={styles.ownerCard}>
+            <View style={styles.ownerAvatar}>
+              <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+                <Path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="#fff" strokeWidth={2} strokeLinecap="round"/>
+                <Circle cx="12" cy="7" r="4" stroke="#fff" strokeWidth={2}/>
+              </Svg>
             </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ownerName}>@{cap.owner}</Text>
+              <Text style={styles.ownerLevel}>{ownerLv.icon} {ownerLv.name} · Verificado</Text>
+            </View>
+            <Text style={styles.ownerPts}>{cap.ownerPts}<Text style={styles.ownerPtsLabel}>{'\n'}pts</Text></Text>
           </View>
 
-          {/* Reports */}
+          {/* Report warning */}
           {reported > 0 && (
-            <View style={styles.reportWarning}>
-              <Text style={styles.reportWarnText}>⚠️ {reported} reporte{reported > 1 ? 's' : ''}{reported >= 3 ? ' — PAUSADA' : ''}</Text>
+            <View style={styles.reportWarn}>
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke={C.red} strokeWidth={2}/>
+                <Line x1="12" y1="9" x2="12" y2="13" stroke={C.red} strokeWidth={2} strokeLinecap="round"/>
+              </Svg>
+              <Text style={styles.reportWarnText}>{reported} reporte{reported > 1 ? 's' : ''}{reported >= 3 ? ' — PAUSADA' : ''}</Text>
             </View>
           )}
 
-          {/* Escrow */}
+          {/* Actions */}
           {escrow === 'idle' ? (
             <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.btnPrimary} onPress={handleEscrow}>
-                <Text style={styles.btnPrimaryText}>{cap.type === 'swap' ? '🔄 Iniciar Swap' : '💰 Comprar'}</Text>
+              <TouchableOpacity style={styles.btnPrimary} onPress={handleBuy}>
+                <Text style={styles.btnPrimaryText}>{isSwap ? 'Iniciar Swap' : 'Comprar'}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.btnGhost} onPress={() => navigation.navigate('Chat', { cap })}>
-                <Text style={styles.btnGhostText}>💬 Chat</Text>
+                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                  <Path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                </Svg>
+                <Text style={styles.btnGhostText}>Chat</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={[styles.card, { borderTopColor: '#00E5A0' }]}>
-              <Text style={styles.escrowTitle}>🔒 ESCROW ACTIVO</Text>
+            <View style={styles.escrowCard}>
+              <View style={styles.escrowHeader}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"/>
+                </Svg>
+                <Text style={styles.escrowTitle}>ESCROW PROTEGIDO</Text>
+              </View>
+
+              {/* States */}
               <View style={styles.escrowStates}>
                 {(['locked', 'confirmed', 'released'] as EscrowState[]).map((s, i) => {
                   const order = ['locked', 'confirmed', 'released'];
@@ -113,48 +153,61 @@ export default function DetailScreen({ route, navigation }: any) {
                   const done = order.indexOf(escrow) > i;
                   return (
                     <View key={s} style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                      <View style={[styles.stateBox, (active || done) && styles.stateBoxActive]}>
-                        <Text style={[styles.stateText, (active || done) && styles.stateTextActive]}>{s.toUpperCase()}</Text>
+                      <View style={[styles.stateBox, (active || done) && styles.stateBoxOn]}>
+                        <Text style={[styles.stateText, (active || done) && styles.stateTextOn]}>
+                          {s === 'locked' ? 'BLOQUEADO' : s === 'confirmed' ? 'CONFIRMADO' : 'LIBERADO'}
+                        </Text>
                       </View>
-                      {i < 2 && <Text style={styles.arrow}>→</Text>}
+                      {i < 2 && <Text style={styles.stateArrow}>›</Text>}
                     </View>
                   );
                 })}
               </View>
-              <View style={styles.commissionBox}>
-                <Text style={styles.commLabel}>COMISIÓN CAPSWAP</Text>
-                {[['Vendedor (3%)', Math.round(cap.price * 0.03)], ['Comprador (2%)', Math.round(cap.price * 0.02)]].map(([l, v]) => (
+
+              {/* Commission */}
+              <View style={styles.commBox}>
+                {[
+                  ['Vendedor (3%)', Math.round(cap.price * 0.03)],
+                  ['Comprador (2%)', Math.round(cap.price * 0.02)],
+                ].map(([l, v]) => (
                   <View key={l as string} style={styles.commRow}>
                     <Text style={styles.commKey}>{l}</Text>
                     <Text style={styles.commVal}>{cop(v as number)}</Text>
                   </View>
                 ))}
-                <View style={styles.nequiRow}>
-                  <Text style={styles.nequiLabel}>Nequi:</Text>
-                  <Text style={styles.nequiNum}>300-000-0000</Text>
+                <View style={[styles.commRow, { borderBottomWidth: 0, paddingTop: 10, marginTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' }]}>
+                  <Text style={styles.commKey}>Pagar a Nequi</Text>
+                  <Text style={[styles.commVal, { color: '#fff' }]}>300-000-0000</Text>
                 </View>
               </View>
+
               {escrow === 'locked' && (
-                <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: '#00E5A0' }]} onPress={handleConfirm}>
-                  <Text style={[styles.btnPrimaryText, { color: '#000' }]}>✅ Confirmar recibido</Text>
+                <TouchableOpacity style={styles.btnPrimary} onPress={handleConfirm}>
+                  <Text style={styles.btnPrimaryText}>Confirmar recibido</Text>
                 </TouchableOpacity>
               )}
               {escrow === 'released' && (
-                <Text style={styles.releasedText}>🎉 ¡Transacción completada!</Text>
+                <Text style={styles.releasedText}>✅ ¡Transacción completada!</Text>
               )}
             </View>
           )}
 
           {/* Safe spots */}
-          <Text style={styles.sectionLabel}>📍 ENCUENTROS SEGUROS</Text>
+          <Text style={styles.sectionLabel}>Puntos de encuentro</Text>
           {SAFE_SPOTS.slice(0, 2).map(s => (
             <View key={s.name} style={styles.spotCard}>
-              <View>
-                <Text style={styles.spotName}>{s.name}</Text>
-                <Text style={styles.spotAddress}>{s.address}</Text>
+              <View style={styles.spotIcon}>
+                <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+                  <Path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="#fff" strokeWidth={2} strokeLinecap="round"/>
+                  <Circle cx="12" cy="10" r="3" stroke="#fff" strokeWidth={2}/>
+                </Svg>
               </View>
-              <View style={styles.metroBadge}>
-                <Text style={styles.metroText}>🚇 {s.metro}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.spotName}>{s.name}</Text>
+                <Text style={styles.spotAddr}>{s.address}</Text>
+              </View>
+              <View style={styles.spotBadge}>
+                <Text style={styles.spotBadgeText}>VERIFICADO</Text>
               </View>
             </View>
           ))}
@@ -165,56 +218,63 @@ export default function DetailScreen({ route, navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: COLORS.bg },
-  header:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingTop: 10 },
-  back:           { color: COLORS.gold, fontWeight: '800', fontSize: 14 },
-  reportBtn:      { color: '#FF5252', fontWeight: '700', fontSize: 13 },
-  hero:           { height: 200, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  heroEmoji:      { fontSize: 100 },
-  pausedOverlay:  { position: 'absolute', inset: 0, backgroundColor: 'rgba(193,48,48,0.7)', alignItems: 'center', justifyContent: 'center' },
-  pausedText:     { color: '#fff', fontWeight: '800', fontSize: 16 },
-  content:        { padding: 16, gap: 12 },
-  card:           { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 18, borderTopWidth: 2, marginBottom: 4 },
-  capName:        { color: '#fff', fontWeight: '900', fontSize: 22, marginBottom: 4 },
-  capBrand:       { color: COLORS.muted, fontSize: 14, marginBottom: 14 },
-  priceRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  price:          { color: '#fff', fontWeight: '900', fontSize: 28 },
-  condBadge:      { borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6 },
-  condText:       { fontSize: 12, fontWeight: '700' },
-  ownerRow:       { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  ownerAvatar:    { width: 48, height: 48, borderRadius: 24, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  ownerEmoji:     { fontSize: 22 },
-  ownerName:      { color: '#fff', fontWeight: '800', fontSize: 15, marginBottom: 4 },
-  lvBadge:        { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
-  lvText:         { fontSize: 11, fontWeight: '700' },
-  ownerPts:       { fontWeight: '900', fontSize: 16 },
-  reportWarning:  { backgroundColor: 'rgba(255,82,82,0.1)', borderWidth: 1, borderColor: 'rgba(255,82,82,0.3)', borderRadius: 12, padding: 14 },
-  reportWarnText: { color: '#FF5252', fontWeight: '700', fontSize: 13 },
-  actionRow:      { flexDirection: 'row', gap: 12 },
-  btnPrimary:     { flex: 1, backgroundColor: COLORS.gold, borderRadius: 14, padding: 16, alignItems: 'center' },
-  btnPrimaryText: { color: '#000', fontWeight: '800', fontSize: 14 },
-  btnGhost:       { flex: 1, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  btnGhostText:   { color: '#fff', fontWeight: '800', fontSize: 14 },
-  escrowTitle:    { color: '#00E5A0', fontWeight: '800', fontSize: 13, letterSpacing: 1, marginBottom: 16 },
-  escrowStates:   { flexDirection: 'row', marginBottom: 16 },
-  stateBox:       { flex: 1, padding: 6, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
-  stateBoxActive: { backgroundColor: 'rgba(0,229,160,0.15)', borderColor: 'rgba(0,229,160,0.4)' },
-  stateText:      { fontSize: 8, fontWeight: '800', color: 'rgba(255,255,255,0.3)' },
-  stateTextActive:{ color: '#00E5A0' },
-  arrow:          { color: 'rgba(255,255,255,0.2)', marginHorizontal: 2, fontSize: 10 },
-  commissionBox:  { backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 12, padding: 14, marginBottom: 14 },
-  commLabel:      { color: COLORS.muted, fontSize: 10, fontWeight: '700', marginBottom: 10, letterSpacing: 1 },
-  commRow:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  commKey:        { color: COLORS.muted, fontSize: 13 },
-  commVal:        { color: COLORS.gold, fontWeight: '800', fontSize: 13 },
-  nequiRow:       { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 4 },
-  nequiLabel:     { color: COLORS.muted, fontSize: 12 },
-  nequiNum:       { color: COLORS.gold, fontWeight: '800', fontSize: 12 },
-  releasedText:   { color: '#00E5A0', fontWeight: '800', fontSize: 16, textAlign: 'center', marginTop: 8 },
-  sectionLabel:   { color: COLORS.muted, fontSize: 11, fontWeight: '700', letterSpacing: 1, marginTop: 4, marginBottom: 8 },
-  spotCard:       { backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  spotName:       { color: '#fff', fontWeight: '800', fontSize: 14, marginBottom: 3 },
-  spotAddress:    { color: COLORS.muted, fontSize: 12 },
-  metroBadge:     { backgroundColor: 'rgba(255,215,0,0.1)', borderWidth: 1, borderColor: 'rgba(255,215,0,0.25)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5 },
-  metroText:      { color: COLORS.gold, fontSize: 10, fontWeight: '700' },
+  container:       { flex: 1, backgroundColor: C.bg },
+  header:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  backBtn:         { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border },
+  backText:        { color: '#fff', fontWeight: '700', fontSize: 13 },
+  reportBtn:       { backgroundColor: 'rgba(255,48,48,0.1)', borderRadius: 12, padding: 10, borderWidth: 1, borderColor: 'rgba(255,48,48,0.2)' },
+  scroll:          { paddingBottom: 40 },
+  hero:            { height: 220, backgroundColor: C.surface, alignItems: 'center', justifyContent: 'center', position: 'relative', marginHorizontal: 16, borderRadius: 24, overflow: 'hidden' },
+  heroEmoji:       { fontSize: 100 },
+  typePill:        { position: 'absolute', top: 14, right: 14, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 5 },
+  typePillVenta:   { backgroundColor: 'rgba(255,255,255,0.1)' },
+  typePillSwap:    { backgroundColor: C.red },
+  typePillText:    { fontSize: 10, fontWeight: '800', color: '#ccc', letterSpacing: 0.5 },
+  condPill:        { position: 'absolute', bottom: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  condDot:         { width: 7, height: 7, borderRadius: 4 },
+  condText:        { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
+  pausedOverlay:   { position: 'absolute', inset: 0, backgroundColor: 'rgba(255,48,48,0.6)', alignItems: 'center', justifyContent: 'center' },
+  pausedText:      { color: '#fff', fontWeight: '900', fontSize: 16, letterSpacing: 1 },
+  content:         { padding: 20, gap: 12 },
+  titleSection:    { backgroundColor: C.surface, borderRadius: 20, padding: 18, borderWidth: 1, borderColor: C.border },
+  capName:         { fontSize: 22, fontWeight: '900', color: C.white, letterSpacing: -0.5, marginBottom: 2 },
+  capBrand:        { fontSize: 11, color: C.muted, fontWeight: '600', letterSpacing: 1.5, marginBottom: 14 },
+  priceRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  price:           { fontSize: 32, fontWeight: '900', color: C.white, letterSpacing: -1 },
+  ptsBadge:        { backgroundColor: 'rgba(255,48,48,0.1)', borderWidth: 1, borderColor: 'rgba(255,48,48,0.2)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  ptsBadgeText:    { fontSize: 12, fontWeight: '800', color: C.red },
+  ownerCard:       { backgroundColor: C.surface, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, borderColor: C.border },
+  ownerAvatar:     { width: 46, height: 46, backgroundColor: '#222', borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  ownerName:       { fontSize: 14, fontWeight: '800', color: C.white },
+  ownerLevel:      { fontSize: 11, color: C.muted, marginTop: 2, fontWeight: '500' },
+  ownerPts:        { fontSize: 20, fontWeight: '900', color: C.white, textAlign: 'right' },
+  ownerPtsLabel:   { fontSize: 9, color: C.muted, fontWeight: '600' },
+  reportWarn:      { backgroundColor: 'rgba(255,48,48,0.08)', borderWidth: 1, borderColor: 'rgba(255,48,48,0.2)', borderRadius: 14, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  reportWarnText:  { color: C.red, fontWeight: '700', fontSize: 13 },
+  actionRow:       { flexDirection: 'row', gap: 12 },
+  btnPrimary:      { flex: 1, backgroundColor: C.white, borderRadius: 16, padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },
+  btnPrimaryText:  { color: C.bg, fontWeight: '900', fontSize: 14 },
+  btnGhost:        { flex: 1, backgroundColor: C.surface, borderRadius: 16, padding: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderWidth: 1, borderColor: C.border },
+  btnGhostText:    { color: C.white, fontWeight: '700', fontSize: 14 },
+  escrowCard:      { backgroundColor: C.surface, borderRadius: 20, padding: 18, gap: 14, borderWidth: 1, borderColor: C.border },
+  escrowHeader:    { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  escrowTitle:     { fontSize: 11, fontWeight: '800', color: C.white, letterSpacing: 1 },
+  escrowStates:    { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  stateBox:        { flex: 1, padding: 8, alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  stateBoxOn:      { backgroundColor: C.white },
+  stateText:       { fontSize: 7, fontWeight: '800', color: '#333', letterSpacing: 0.5 },
+  stateTextOn:     { color: C.bg },
+  stateArrow:      { color: '#2A2A2A', fontSize: 16 },
+  commBox:         { backgroundColor: '#111', borderRadius: 14, padding: 14 },
+  commRow:         { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.04)' },
+  commKey:         { fontSize: 12, color: C.muted },
+  commVal:         { fontSize: 13, fontWeight: '800', color: C.red },
+  releasedText:    { color: C.white, fontWeight: '800', fontSize: 15, textAlign: 'center' },
+  sectionLabel:    { fontSize: 13, fontWeight: '800', color: C.white, marginTop: 4 },
+  spotCard:        { backgroundColor: C.surface, borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: C.border },
+  spotIcon:        { width: 38, height: 38, backgroundColor: '#1A1A1A', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  spotName:        { fontSize: 13, fontWeight: '700', color: C.white, marginBottom: 2 },
+  spotAddr:        { fontSize: 11, color: C.muted },
+  spotBadge:       { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  spotBadgeText:   { fontSize: 9, fontWeight: '800', color: '#888' },
 });

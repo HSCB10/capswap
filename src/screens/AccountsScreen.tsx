@@ -1,133 +1,134 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
-import { COLORS } from '../data/constants';
+import Svg, { Path, Line, Circle } from 'react-native-svg';
+
+const C = {
+  bg: '#0C0C0C', surface: '#141414',
+  white: '#FFFFFF', muted: '#444', border: 'rgba(255,255,255,0.05)', red: '#FF3030',
+};
 
 const ACCOUNTS = [
   {
-    icon: '👤',
-    name: 'Personal',
-    sub: 'Para coleccionistas y usuarios casuales',
-    price: 'Gratis',
-    color: '#00E5A0',
-    bgColor: 'rgba(0,229,160,0.1)',
-    borderColor: 'rgba(0,229,160,0.3)',
-    cta: 'Tu cuenta actual',
-    ctaColor: '#1A1A1A',
-    ctaTextColor: 'rgba(255,255,255,0.4)',
+    icon: '👤', name: 'Personal', sub: 'Para coleccionistas y usuarios casuales',
+    price: 'Gratis', current: true,
     features: [
-      { icon: '🧢', text: 'Hasta 3 gorras activas al mismo tiempo' },
-      { icon: '🔄', text: 'Swap y venta habilitados' },
-      { icon: '💬', text: 'Chat con compradores y vendedores' },
-      { icon: '🔒', text: 'Escrow automático en cada transacción' },
-      { icon: '📍', text: 'Acceso a puntos seguros verificados' },
-      { icon: '💸', text: '5% comisión total (3% vendedor + 2% comprador)' },
+      'Hasta 3 gorras activas al mismo tiempo',
+      'Swap y venta habilitados',
+      'Chat con compradores y vendedores',
+      'Escrow automático en cada transacción',
+      'Acceso a puntos seguros verificados',
+      '5% comisión total (3% + 2%)',
     ],
   },
   {
-    icon: '🏪',
-    name: 'Vendedor Pro',
-    sub: 'Para vendedores frecuentes',
-    price: '$25k/mes',
-    color: '#9B59B6',
-    bgColor: 'rgba(155,89,182,0.1)',
-    borderColor: 'rgba(155,89,182,0.3)',
-    cta: 'Activar Vendedor Pro',
-    ctaColor: '#9B59B6',
-    ctaTextColor: '#fff',
+    icon: '🏪', name: 'Vendedor Pro', sub: 'Para vendedores frecuentes',
+    price: '$25k/mes', current: false,
     features: [
-      { icon: '🧢', text: 'Gorras ilimitadas activas al mismo tiempo' },
-      { icon: '📌', text: '3 publicaciones destacadas al mes incluidas' },
-      { icon: '📊', text: 'Dashboard: vistas, contactos, conversión' },
-      { icon: '💸', text: '8% de comisión por volumen de ventas' },
-      { icon: '⭐', text: 'Badge "Vendedor Pro" en perfil y publicaciones' },
-      { icon: '🚀', text: 'Prioridad en resultados de búsqueda' },
+      'Gorras ilimitadas activas',
+      '3 publicaciones destacadas al mes',
+      'Dashboard con estadísticas de ventas',
+      'Badge "Vendedor Pro" en perfil',
+      'Prioridad en resultados de búsqueda',
+      '8% comisión por volumen',
     ],
   },
   {
-    icon: '🏬',
-    name: 'Negocio',
-    sub: 'Tiendas, marcas y distribuidores',
-    price: '$80k/mes',
-    color: '#E8A838',
-    bgColor: 'rgba(232,168,56,0.1)',
-    borderColor: 'rgba(232,168,56,0.3)',
-    cta: 'Registrar mi negocio',
-    ctaColor: '#E8A838',
-    ctaTextColor: '#000',
+    icon: '🏬', name: 'Negocio', sub: 'Tiendas, marcas y distribuidores',
+    price: '$80k/mes', current: false,
     features: [
-      { icon: '🏬', text: 'Perfil de tienda con logo, banner y descripción' },
-      { icon: '🧢', text: 'Catálogo ilimitado con gestión por colecciones' },
-      { icon: '📍', text: 'Tu tienda aparece como punto seguro verificado' },
-      { icon: '📣', text: '5 publicaciones destacadas + banner en búsqueda' },
-      { icon: '💸', text: '10% comisión por volumen y visibilidad extra' },
-      { icon: '📊', text: 'Analytics avanzado: tráfico, conversión, reputación' },
+      'Perfil de tienda con logo y banner',
+      'Catálogo ilimitado por colecciones',
+      'Tu tienda como punto seguro verificado',
+      '5 publicaciones destacadas + banner',
+      'Analytics avanzado de tráfico',
+      '10% comisión + visibilidad extra',
     ],
   },
 ];
 
-export default function AccountsScreen() {
+export default function AccountsScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.hero}>
-        <Text style={styles.heroTitle}>Tipos de cuenta</Text>
-        <Text style={styles.heroSub}>Elige el plan que se adapte a cómo usas CapSwap</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+            <Path d="M19 12H5M12 5l-7 7 7 7" stroke="#fff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/>
+          </Svg>
+          <Text style={styles.backText}>Volver</Text>
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <Text style={styles.title}>Tipos de cuenta</Text>
+        <Text style={styles.subtitle}>Elige el plan que se adapte a cómo usas CapSwap.</Text>
 
         {/* Commission info */}
-        <View style={styles.commBox}>
-          <Text style={styles.commTitle}>💰 ¿Cómo funcionan las comisiones?</Text>
-          <Text style={styles.commText}>CapSwap cobra una comisión dividida entre vendedor y comprador. El dinero se retiene en escrow hasta que ambas partes confirman la transacción.</Text>
+        <View style={styles.commCard}>
+          <View style={styles.commHeader}>
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+              <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#fff" strokeWidth={2} strokeLinecap="round"/>
+            </Svg>
+            <Text style={styles.commTitle}>Comisiones por plan</Text>
+          </View>
           <View style={styles.commRow}>
-            {[['Personal', '5%', '#00E5A0'], ['Vendedor Pro', '8%', '#9B59B6'], ['Negocio', '10%', '#E8A838']].map(([name, pct, color]) => (
-              <View key={name} style={[styles.commItem, { borderColor: color + '40', backgroundColor: color + '10' }]}>
-                <Text style={[styles.commPct, { color }]}>{pct}</Text>
-                <Text style={styles.commName}>{name}</Text>
+            {[['Personal', '5%'], ['Vendedor Pro', '8%'], ['Negocio', '10%']].map(([n, p]) => (
+              <View key={n} style={styles.commItem}>
+                <Text style={styles.commPct}>{p}</Text>
+                <Text style={styles.commName}>{n}</Text>
               </View>
             ))}
           </View>
         </View>
 
+        {/* Account cards */}
         {ACCOUNTS.map((acc, i) => (
-          <View key={i} style={[styles.card, { borderColor: acc.borderColor }]}>
+          <View key={i} style={[styles.accCard, acc.current && styles.accCardCurrent]}>
             {/* Header */}
-            <View style={[styles.cardHead, { backgroundColor: acc.bgColor }]}>
-              <View style={[styles.accIcon, { backgroundColor: acc.bgColor, borderColor: acc.borderColor, borderWidth: 1 }]}>
-                <Text style={{ fontSize: 24 }}>{acc.icon}</Text>
-              </View>
+            <View style={styles.accHeader}>
+              <Text style={styles.accIcon}>{acc.icon}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.accName, { color: acc.color }]}>{acc.name}</Text>
+                <Text style={styles.accName}>{acc.name}</Text>
                 <Text style={styles.accSub}>{acc.sub}</Text>
               </View>
-              <View style={[styles.priceBadge, { backgroundColor: acc.bgColor, borderColor: acc.borderColor }]}>
-                <Text style={[styles.priceText, { color: acc.color }]}>{acc.price}</Text>
+              <View style={[styles.priceBadge, acc.current && styles.priceBadgeCurrent]}>
+                <Text style={[styles.priceText, acc.current && styles.priceTextCurrent]}>{acc.price}</Text>
               </View>
             </View>
+
+            {/* Divider */}
+            <View style={styles.accDiv} />
 
             {/* Features */}
             <View style={styles.features}>
               {acc.features.map((f, j) => (
-                <View key={j} style={[styles.featRow, j < acc.features.length - 1 && styles.featBorder]}>
-                  <Text style={styles.featIcon}>{f.icon}</Text>
-                  <Text style={styles.featText}>{f.text}</Text>
+                <View key={j} style={styles.featRow}>
+                  <View style={styles.featCheck}>
+                    <Svg width={10} height={10} viewBox="0 0 24 24" fill="none">
+                      <Path d="M20 6L9 17l-5-5" stroke={acc.current ? C.bg : C.white} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"/>
+                    </Svg>
+                  </View>
+                  <Text style={styles.featText}>{f}</Text>
                 </View>
               ))}
             </View>
 
             {/* CTA */}
-            <TouchableOpacity
-              style={[styles.cta, { backgroundColor: acc.ctaColor }]}
-              onPress={() => {
-                if (i === 0) return;
-                Alert.alert(`Activar ${acc.name}`, `¿Deseas activar el plan ${acc.name} por ${acc.price}?`, [
+            {acc.current ? (
+              <View style={styles.currentBadge}>
+                <Text style={styles.currentBadgeText}>Tu plan actual</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.ctaBtn}
+                activeOpacity={0.85}
+                onPress={() => Alert.alert(`Activar ${acc.name}`, `¿Deseas activar el plan ${acc.name} por ${acc.price}?`, [
                   { text: 'Cancelar', style: 'cancel' },
                   { text: 'Activar', onPress: () => Alert.alert('✅ ¡Listo!', `Plan ${acc.name} activado.`) },
-                ]);
-              }}
-            >
-              <Text style={[styles.ctaText, { color: acc.ctaTextColor }]}>{acc.cta}</Text>
-            </TouchableOpacity>
+                ])}
+              >
+                <Text style={styles.ctaBtnText}>Activar {acc.name}</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ))}
 
@@ -137,30 +138,37 @@ export default function AccountsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: COLORS.bg },
-  hero:       { backgroundColor: '#0D0D1A', padding: 20, paddingTop: 10 },
-  heroTitle:  { color: '#fff', fontWeight: '900', fontSize: 22, marginBottom: 4 },
-  heroSub:    { color: 'rgba(255,255,255,0.4)', fontSize: 13 },
-  content:    { padding: 16, paddingBottom: 80 },
-  commBox:    { backgroundColor: 'rgba(255,215,0,0.06)', borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)', borderRadius: 16, padding: 16, marginBottom: 16 },
-  commTitle:  { color: COLORS.gold, fontWeight: '800', fontSize: 14, marginBottom: 8 },
-  commText:   { color: 'rgba(255,255,255,0.5)', fontSize: 13, lineHeight: 19, marginBottom: 14 },
-  commRow:    { flexDirection: 'row', gap: 8 },
-  commItem:   { flex: 1, alignItems: 'center', padding: 10, borderRadius: 10, borderWidth: 1 },
-  commPct:    { fontWeight: '900', fontSize: 22 },
-  commName:   { color: COLORS.muted, fontSize: 10, fontWeight: '700', marginTop: 2 },
-  card:       { backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 16, borderWidth: 1, marginBottom: 12, overflow: 'hidden' },
-  cardHead:   { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
-  accIcon:    { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  accName:    { fontWeight: '900', fontSize: 17 },
-  accSub:     { color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 },
-  priceBadge: { borderRadius: 10, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 5 },
-  priceText:  { fontWeight: '800', fontSize: 13 },
-  features:   { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 8 },
-  featRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 10 },
-  featBorder: { borderBottomWidth: 0.5, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  featIcon:   { fontSize: 16, flexShrink: 0, marginTop: 1 },
-  featText:   { color: 'rgba(255,255,255,0.6)', fontSize: 13, flex: 1, lineHeight: 19 },
-  cta:        { margin: 16, marginTop: 4, padding: 14, borderRadius: 12, alignItems: 'center' },
-  ctaText:    { fontWeight: '800', fontSize: 14 },
+  container:          { flex: 1, backgroundColor: C.bg },
+  header:             { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  backBtn:            { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: C.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border, alignSelf: 'flex-start' },
+  backText:           { color: '#fff', fontWeight: '700', fontSize: 13 },
+  scroll:             { padding: 16, paddingBottom: 60, gap: 12 },
+  title:              { fontSize: 27, fontWeight: '900', color: C.white, letterSpacing: -1, marginBottom: 4 },
+  subtitle:           { color: C.muted, fontSize: 13, lineHeight: 20, marginBottom: 4 },
+  commCard:           { backgroundColor: C.surface, borderRadius: 20, padding: 18, borderWidth: 1, borderColor: C.border, gap: 14 },
+  commHeader:         { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  commTitle:          { color: C.white, fontWeight: '800', fontSize: 14 },
+  commRow:            { flexDirection: 'row', gap: 8 },
+  commItem:           { flex: 1, backgroundColor: '#111', borderRadius: 14, padding: 14, alignItems: 'center', gap: 4 },
+  commPct:            { color: C.white, fontWeight: '900', fontSize: 22, letterSpacing: -1 },
+  commName:           { color: C.muted, fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  accCard:            { backgroundColor: C.surface, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: C.border },
+  accCardCurrent:     { backgroundColor: C.white },
+  accHeader:          { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
+  accIcon:            { fontSize: 28 },
+  accName:            { fontSize: 17, fontWeight: '900', color: C.white, letterSpacing: -0.5 },
+  accSub:             { fontSize: 12, color: C.muted, marginTop: 2 },
+  priceBadge:         { backgroundColor: '#111', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  priceBadgeCurrent:  { backgroundColor: C.bg },
+  priceText:          { color: C.white, fontWeight: '800', fontSize: 14 },
+  priceTextCurrent:   { color: C.white },
+  accDiv:             { height: 1, backgroundColor: 'rgba(0,0,0,0.08)', marginBottom: 16 },
+  features:           { gap: 10, marginBottom: 18 },
+  featRow:            { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  featCheck:          { width: 20, height: 20, backgroundColor: C.bg, borderRadius: 6, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  featText:           { color: '#555', fontSize: 13, flex: 1, lineHeight: 20 },
+  currentBadge:       { backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: 14, padding: 14, alignItems: 'center' },
+  currentBadgeText:   { color: C.bg, fontWeight: '800', fontSize: 13 },
+  ctaBtn:             { backgroundColor: C.white, borderRadius: 14, padding: 15, alignItems: 'center' },
+  ctaBtnText:         { color: C.bg, fontWeight: '900', fontSize: 14 },
 });
