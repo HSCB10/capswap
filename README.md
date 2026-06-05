@@ -58,8 +58,6 @@ Los intercambios de gorras en Medellín ocurren en grupos de Facebook sin ningun
 └── App.
 
 ## 🏃 Correr el proyecto
-
-```bash
 npm install
 npx expo start
 

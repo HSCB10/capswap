@@ -1,42 +1,55 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { INITIAL_CAPS } from '../data/caps';
-import { CONDITIONS, COLORS, LEVELS } from '../data/constants';
+import { CONDITIONS, LEVELS } from '../data/constants';
 import { Cap } from '../types';
+
+const C = {
+  bg: '#0C0C0C', surface: '#141414', surface2: '#1C1C1C',
+  white: '#FFFFFF', muted: '#444444', muted2: '#666666',
+  border: 'rgba(255,255,255,0.05)', red: '#FF3030',
+};
 
 function getLevel(pts: number) {
   return LEVELS.find(l => pts >= l.min && pts <= l.max) || LEVELS[0];
 }
+function cop(n: number) { return '$' + n.toLocaleString('es-CO'); }
 
-function cop(n: number) {
-  return '$' + n.toLocaleString('es-CO') + ' COP';
-}
+const COND_DOTS = ['#22CC66', '#4488FF', '#FFAA22', '#FF6644', '#FF4444'];
 
 function CapCard({ cap, onPress }: { cap: Cap; onPress: () => void }) {
   const cond = CONDITIONS[cap.condition];
-  const lv = getLevel(cap.ownerPts);
+  const isSwap = cap.type === 'swap' || cap.type === 'ambos';
   return (
-    <TouchableOpacity style={[styles.card, { borderTopColor: cap.color }]} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.capImage, { backgroundColor: cap.color + '15' }]}>
-        <Text style={styles.capEmoji}>🧢</Text>
-        <View style={[styles.typeBadge, { borderColor: cap.color + '60', backgroundColor: cap.color + '20' }]}>
-          <Text style={[styles.typeBadgeText, { color: cap.color }]}>
-            {cap.type === 'swap' ? '🔄 SWAP' : cap.type === 'ambos' ? '🔄💰' : '💰 VENTA'}
-          </Text>
+    <TouchableOpacity
+      style={[styles.card, isSwap && styles.cardSwap]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      <View style={styles.cardImg}>
+        <Text style={styles.cardEmoji}>🧢</Text>
+        <View style={styles.cardBadges}>
+          {isSwap
+            ? <View style={styles.badgeSwap}><Text style={styles.badgeSwapText}>SWAP</Text></View>
+            : <View style={styles.badgeVenta}><Text style={styles.badgeVentaText}>VENTA</Text></View>
+          }
+        </View>
+        <View style={styles.condRow}>
+          <View style={[styles.condDot, { backgroundColor: COND_DOTS[cap.condition] }]} />
+          <Text style={styles.condLabel}>{cond.label}</Text>
         </View>
       </View>
-      <View style={styles.cardInfo}>
+      <View style={styles.cardBody}>
         <Text style={styles.cardName} numberOfLines={1}>{cap.name}</Text>
-        <Text style={styles.cardBrand}>{cap.brand}</Text>
-        <View style={styles.cardBottom}>
+        <Text style={styles.cardBrand}>{cap.brand.toUpperCase()}</Text>
+        <View style={styles.cardDiv} />
+        <View style={styles.cardFoot}>
           <Text style={styles.cardPrice}>{cop(cap.price)}</Text>
-          <View style={[styles.ptsBadge, { backgroundColor: cond.color + '20', borderColor: cond.color + '50' }]}>
-            <Text style={[styles.ptsText, { color: cond.color }]}>+{cond.pts}pts</Text>
+          <View style={styles.cardPts}>
+            <Text style={styles.cardPtsText}>+{cond.pts}</Text>
           </View>
         </View>
-        <View style={[styles.levelBadge, { backgroundColor: lv.color + '20', borderColor: lv.color + '40' }]}>
-          <Text style={[styles.levelText, { color: lv.color }]}>{lv.icon} {lv.name} · @{cap.owner}</Text>
-        </View>
+        <Text style={styles.cardSeller} numberOfLines={1}>📍 @{cap.owner}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -44,40 +57,80 @@ function CapCard({ cap, onPress }: { cap: Cap; onPress: () => void }) {
 
 export default function HomeScreen({ navigation }: any) {
   const [filter, setFilter] = useState<'all' | 'venta' | 'swap'>('all');
+
   const caps = INITIAL_CAPS.filter(c =>
     filter === 'all' ? true :
     filter === 'swap' ? c.type === 'swap' || c.type === 'ambos' :
     c.type === 'venta' || c.type === 'ambos'
   );
 
+  const FILTERS = [
+    { key: 'all',   label: 'Todos'     },
+    { key: 'venta', label: '💰 Venta'  },
+    { key: 'swap',  label: '🔄 Swap'   },
+  ];
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>CAP<Text style={{ color: COLORS.gold }}>SWAP</Text></Text>
-        <View style={styles.levelPill}>
-          <Text style={styles.levelPillText}>🥇 1800pts</Text>
+        <Text style={styles.logo}>
+          Cap<Text style={{ color: C.red }}>Swap</Text>
+        </Text>
+        <View style={styles.headerRight}>
+          <View style={styles.iconBtn}>
+            <Text style={{ fontSize: 16 }}>🔔</Text>
+            <View style={styles.redDot} />
+          </View>
+          <View style={styles.avatarBtn}>
+            <Text style={styles.avatarText}>SC</Text>
+          </View>
         </View>
       </View>
 
-      <View style={styles.filters}>
-        {(['all', 'venta', 'swap'] as const).map(f => (
-          <TouchableOpacity key={f} onPress={() => setFilter(f)}
-            style={[styles.filterBtn, filter === f && styles.filterBtnActive]}>
-            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {f === 'all' ? 'Todos' : f === 'venta' ? '💰 Venta' : '🔄 Swap'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Filter chips */}
+      <View style={styles.chipsContainer}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={FILTERS}
+          keyExtractor={i => i.key}
+          contentContainerStyle={styles.chipsContent}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => setFilter(item.key as any)}
+              style={[styles.chip, filter === item.key && styles.chipOn]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.chipText, filter === item.key && styles.chipTextOn]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
       </View>
 
+      {/* Section title */}
+      <View style={styles.secTitle}>
+        <Text style={styles.secTitleText}>Cerca de ti · Medellín</Text>
+        <TouchableOpacity activeOpacity={0.7}>
+          <Text style={styles.secTitleSub}>Ver todos →</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Grid */}
       <FlatList
         data={caps}
         keyExtractor={i => i.id.toString()}
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
-          <CapCard cap={item} onPress={() => navigation.navigate('Detail', { cap: item })} />
+          <CapCard
+            cap={item}
+            onPress={() => navigation.navigate('Detail', { cap: item })}
+          />
         )}
       />
     </SafeAreaView>
@@ -85,30 +138,44 @@ export default function HomeScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: COLORS.bg },
-  header:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, paddingTop: 10 },
-  logo:            { fontFamily: 'System', fontWeight: '900', fontSize: 28, color: '#fff', letterSpacing: 2 },
-  levelPill:       { backgroundColor: 'rgba(255,215,0,0.15)', borderWidth: 1, borderColor: 'rgba(255,215,0,0.4)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
-  levelPillText:   { color: COLORS.gold, fontSize: 12, fontWeight: '700' },
-  filters:         { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginBottom: 12 },
-  filterBtn:       { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  filterBtnActive: { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  filterText:      { color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '700' },
-  filterTextActive:{ color: '#000' },
-  list:            { padding: 8 },
-  row:             { gap: 8, marginBottom: 8 },
-  card:            { flex: 1, backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 16, overflow: 'hidden', borderTopWidth: 2 },
-  capImage:        { height: 110, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  capEmoji:        { fontSize: 52 },
-  typeBadge:       { position: 'absolute', top: 8, left: 8, borderRadius: 8, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 3 },
-  typeBadgeText:   { fontSize: 9, fontWeight: '800' },
-  cardInfo:        { padding: 12 },
-  cardName:        { color: '#fff', fontWeight: '800', fontSize: 13, marginBottom: 2 },
-  cardBrand:       { color: 'rgba(255,255,255,0.4)', fontSize: 11, marginBottom: 8 },
-  cardBottom:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  cardPrice:       { color: '#fff', fontWeight: '900', fontSize: 15 },
-  ptsBadge:        { borderRadius: 6, borderWidth: 1, paddingHorizontal: 7, paddingVertical: 3 },
-  ptsText:         { fontSize: 9, fontWeight: '700' },
-  levelBadge:      { borderRadius: 8, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4 },
-  levelText:       { fontSize: 10, fontWeight: '700' },
+  container:       { flex: 1, backgroundColor: C.bg },
+  header:          { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 14 },
+  logo:            { fontSize: 27, fontWeight: '900', color: C.white, letterSpacing: -1 },
+  headerRight:     { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  iconBtn:         { width: 38, height: 38, backgroundColor: '#1A1A1A', borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  redDot:          { width: 8, height: 8, backgroundColor: C.red, borderRadius: 4, position: 'absolute', top: -2, right: -2, borderWidth: 1.5, borderColor: C.bg },
+  avatarBtn:       { width: 38, height: 38, backgroundColor: C.white, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  avatarText:      { fontSize: 12, fontWeight: '900', color: C.bg },
+  chipsContainer:  { marginBottom: 14 },
+  chipsContent:    { paddingHorizontal: 20, gap: 8 },
+  chip:            { paddingHorizontal: 20, paddingVertical: 9, borderRadius: 100, borderWidth: 1, borderColor: '#2A2A2A', backgroundColor: 'transparent' },
+  chipOn:          { backgroundColor: C.white, borderColor: C.white },
+  chipText:        { fontSize: 13, fontWeight: '700', color: '#555' },
+  chipTextOn:      { color: C.bg },
+  secTitle:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 14 },
+  secTitleText:    { fontSize: 15, fontWeight: '800', color: C.white },
+  secTitleSub:     { fontSize: 12, color: C.muted, fontWeight: '500' },
+  list:            { paddingHorizontal: 16, paddingBottom: 20 },
+  row:             { gap: 12, marginBottom: 12 },
+  card:            { flex: 1, backgroundColor: C.surface, borderRadius: 22, overflow: 'hidden', borderWidth: 1, borderColor: C.border },
+  cardSwap:        { borderLeftWidth: 2, borderLeftColor: C.red },
+  cardImg:         { height: 124, backgroundColor: '#1C1C1C', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  cardEmoji:       { fontSize: 52 },
+  cardBadges:      { position: 'absolute', top: 10, right: 10 },
+  badgeSwap:       { backgroundColor: C.red, borderRadius: 7, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeSwapText:   { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  badgeVenta:      { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 7, paddingHorizontal: 8, paddingVertical: 3 },
+  badgeVentaText:  { fontSize: 9, fontWeight: '800', color: '#ccc', letterSpacing: 0.5 },
+  condRow:         { position: 'absolute', bottom: 10, left: 12, flexDirection: 'row', alignItems: 'center', gap: 5 },
+  condDot:         { width: 7, height: 7, borderRadius: 4 },
+  condLabel:       { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  cardBody:        { padding: 12 },
+  cardName:        { fontSize: 13, fontWeight: '800', color: C.white, marginBottom: 2, letterSpacing: -0.2 },
+  cardBrand:       { fontSize: 10, color: '#444', fontWeight: '600', marginBottom: 10, letterSpacing: 0.8 },
+  cardDiv:         { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: 10 },
+  cardFoot:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cardPrice:       { fontSize: 17, fontWeight: '900', color: C.white, letterSpacing: -0.5 },
+  cardPts:         { backgroundColor: 'rgba(255,48,48,0.1)', borderWidth: 1, borderColor: 'rgba(255,48,48,0.2)', borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 },
+  cardPtsText:     { fontSize: 10, fontWeight: '800', color: C.red },
+  cardSeller:      { marginTop: 7, fontSize: 10, color: '#3A3A3A', fontWeight: '600' },
 });
